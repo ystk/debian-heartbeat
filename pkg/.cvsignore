@@ -1,0 +1,8 @@
+Makefile
+Makefile.in
+tmpinst
+stamp-tmpinst
+packages
+*.beam
+parser-messages
+MISC_ERRORS

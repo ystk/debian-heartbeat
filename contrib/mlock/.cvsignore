@@ -1,0 +1,8 @@
+mlock
+Makefile.in
+Makefile
+.libs
+.deps
+*.beam
+parser-messages
+MISC_ERRORS
