@@ -87,6 +87,7 @@
 #include <clplumbing/cl_poll.h>
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/netstring.h>
+#include <clplumbing/cpulimits.h>
 #include "hb_signal.h"
 
 /* Definitions of API query handlers */
@@ -1061,17 +1062,10 @@ static int
 add_client_gen(client_proc_t* client, struct ha_msg* msg)
 {
 	char buf[MAX_CLIENT_GEN];
-	
+
 	memset(buf, 0, MAX_CLIENT_GEN);
-	snprintf(buf, MAX_CLIENT_GEN, "%d", client->cligen);	
-	if (ha_msg_add(msg, F_CLIENT_GENERATION, buf) != HA_OK){
-		cl_log(LOG_ERR, "api_send_client_status: cannot add fields");
-		ha_msg_del(msg); msg=NULL;
-		return HA_FAIL;
-	}
-	
-	return HA_OK;
-	
+	snprintf(buf, MAX_CLIENT_GEN, "%d", client->cligen);
+	return ha_msg_mod(msg, F_CLIENT_GENERATION, buf);
 }
 
 
@@ -1142,10 +1136,11 @@ api_process_request(client_proc_t* fromclient, struct ha_msg * msg)
 			cl_log_message(LOG_DEBUG, msg);
 		}
 
-		/* Mikey likes it! */
 		if (add_client_gen(fromclient, msg) != HA_OK){
 			cl_log(LOG_ERR, "api_process_request: "
-			       " add client generation to ha_msg failed ");			
+			       "add client generation to ha_msg failed");
+			ha_msg_del(msg); msg=NULL;
+			return;
 		}
 
 		if (send_cluster_msg(msg) != HA_OK) {
@@ -1279,6 +1274,9 @@ process_registerevent(IPC_Channel* chan,  gpointer user_data)
 		cl_log(LOG_DEBUG
 		,	"process_registerevent() {");
 	}
+
+	/* FIXME do we want to set a different default send_qlen,
+	 * as per some configuration directive? */
 	/* Zap! */
 	memset(client, 0, sizeof(*client));
 	client->pid = 0;
@@ -1574,9 +1572,10 @@ api_send_client_status(client_proc_t* client, const char * status
 		ha_msg_del(msg); msg=NULL;
 		return;
 	}
-	
+
 	if (add_client_gen(client, msg) != HA_OK){
-		cl_log(LOG_ERR, "api_send_client_status: cannot add fields");
+		cl_log(LOG_ERR,
+			"api_send_client_status: cannot add client generation");
 		ha_msg_del(msg); msg=NULL;
 		return;
 	}
@@ -1625,6 +1624,7 @@ int
 api_remove_client_pid(pid_t c_pid, const char * reason)
 {
 	char		cpid[20];
+	int		backlog_processed = 0;
 	client_proc_t* 	client;
 
 	snprintf(cpid, sizeof(cpid)-1, "%d", c_pid);
@@ -1633,10 +1633,20 @@ api_remove_client_pid(pid_t c_pid, const char * reason)
 	}
 
 	client->removereason = reason;
-	while (client->chan->recv_queue->current_qlen > 0
+	client->isindispatch = TRUE; /* avoid recursion */
+	while (client->chan && client->chan->recv_queue->current_qlen > 0
 	&&	(!reason || strcmp(reason, API_SIGNOFF) != 0)) {
 		ProcessAnAPIRequest(client);
+		if ((++backlog_processed & 0x3f) == 0) {
+			/* FIXME backlog processing should be done from a
+			 * dedicated backlog processing callback from the
+			 * mainloop, so we won't stall other callback for too
+			 * long. For now, just try to avoid being killed by our
+			 * busy-loop protection. */
+			cl_cpu_limit_update();
+		}
 	}
+	client->isindispatch = FALSE;
 
 	G_main_del_IPC_Channel(client->gsource);
 	/* Should trigger G_remove_client (below) */
@@ -1688,10 +1698,12 @@ api_remove_client_int(client_proc_t* req, const char * reason)
 		/* Is this the client? */
 		if (client->pid == req->pid) {
 			if (ANYDEBUG) {
+				const char *id = client->iscasual
+				?	"casual" : client->client_id;
 				cl_log(LOG_DEBUG
-				,	"api_remove_client_int: removing"
+				,	"api_remove_client_int: removing '%s'"
 				" pid [%ld] reason: %s"
-				,	(long)req->pid, reason);
+				,	id, (long)req->pid, reason);
 			}
 			if (prev == NULL) {
 				client_list = client->next;

@@ -11,7 +11,6 @@
 cfg:=--prefix=/usr --sysconfdir=/etc --localstatedir=/var \
   --mandir=/usr/share/man --disable-crm \
   --with-group-name=haclient --with-ccmuser-name=hacluster \
-  --enable-snmp-subagent --with-mibsdir=/usr/share/snmp/mibs \
   --enable-libc-malloc --disable-fatal-warnings
 
 # These are used for cross-compiling and for saving the configure script
@@ -39,18 +38,20 @@ RELEASE := $(shell dpkg-parsechangelog | awk '/^Version: / { print $$2 }')
 UPSTREAM := $(shell echo "$(RELEASE)" | sed 's/:\?\([0-9\.]\+\)-[0-9].*/\1/')
 
 
-build: build-stamp
+build: build-arch build-indep
+build-arch: build-stamp
+build-indep: build-stamp
 build-stamp:
 	dh_testdir
-	# Only boostrap as neccessary
+	# Only bootstrap as neccessary
 	if test -e ./configure -a ! -x ./configure; then		\
 		chmod u+x ./configure;					\
 	fi
 	if test -e ./py-compile -a ! -x ./py-compile; then		\
 		chmod u+x ./py-compile;					\
 	fi
-	test ! -x ./configure || ./configure $(cfg);
-	test -x ./configure || ./bootstrap $(cfg)
+	test ! -x ./configure || /bin/bash ./configure $(cfg);
+	test -x ./configure || /bin/bash ./bootstrap $(cfg)
 	$(MAKE)
 	touch build-stamp
 
@@ -89,6 +90,7 @@ install-stamp:
 	install -c -m 755 heartbeat/init.d/heartbeat \
                 $(DTMP)/etc/init.d/heartbeat
 	cd $(DTMP)/etc/ && ln -s ha.d heartbeat
+	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.la'`
 	
 	dh_install --source=debian/tmp --list-missing
 	
@@ -102,7 +104,8 @@ install-stamp:
 	rm -rf `pwd`/debian/heartbeat-dev/usr/include/
 	rm -rf `pwd`/debian/heartbeat-common-dev/usr/lib/stonith/plugins/stonith2/ribcl.py
 	
-	rm -rf `pwd`/debian/heartbeat/etc/ha.d/{conf,cts}
+	rm -rf `pwd`/debian/heartbeat/etc/ha.d/conf
+	rm -rf `pwd`/debian/heartbeat/etc/ha.d/cts
 	rm -rf `pwd`/debian/heartbeat/usr/lib/stonith
 	rm -rf `pwd`/debian/heartbeat/usr/lib/pils
 	rm -rf `pwd`/debian/heartbeat/usr/include/
@@ -131,8 +134,7 @@ binary-indep: build install
 	dh_makeshlibs -i -V
 	dh_installdeb -i
 	dh_perl -i
-	dh_pycentral -i
-	dh_python -i `pwd`/usr/lib/heartbeat/cts `pwd`/usr/lib/heartbeat
+	dh_python2 -i -V 2.6- --no-guessing-versions --no-guessing-deps
 	dh_shlibdeps -i
 	dh_gencontrol -i
 	dh_md5sums -i
@@ -163,8 +165,7 @@ binary-arch: build install
 	dh_makeshlibs -a -V
 	dh_installdeb -a
 	dh_perl -a
-	dh_pycentral -a
-	dh_python -a `pwd`/usr/lib/heartbeat/cts `pwd`/usr/lib/heartbeat
+	dh_python2 -a -V 2.6- --no-guessing-versions --no-guessing-deps
 	dh_shlibdeps -a
 	dh_gencontrol -a
 	dh_md5sums -a

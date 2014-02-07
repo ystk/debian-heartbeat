@@ -1,3 +1,47 @@
+heartbeat (1:3.0.5-3) unstable; urgency=low
+
+  * Adopted numerous changes from the Ubuntu packages, implemented by Andres
+    Rodriguez to make co-maintaining these packages in Ubuntu and Debian a
+    bit easier.
+  * Updated the Standards-Version to 3.9.2, no changes necessary.
+
+ -- Martin Loschwitz <madkiss@debian.org>  Thu, 20 Oct 2011 13:22:59 +0000
+
+heartbeat (1:3.0.5-2) unstable; urgency=low
+
+  * Fix the dh_python2 call in debian/rules to avoid python madness 
+
+ -- Martin Loschwitz <madkiss@debian.org>  Thu, 25 Aug 2011 07:24:12 +0000
+
+heartbeat (1:3.0.5-1) unstable; urgency=low
+
+  * New upstream version (3.0.5) 
+  * Change dependency from cluster-agents to resource-agents
+  * Build-Depend on resource-agents-dev
+
+ -- Martin Loschwitz <madkiss@debian.org>  Wed, 24 Aug 2011 11:09:08 +0000
+
+heartbeat (1:3.0.4-1.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Remove references to other libraries from dependency_libs field
+    Closes: #619553
+
+ -- Luk Claes <luk@debian.org>  Mon, 30 May 2011 08:01:35 +0200
+
+heartbeat (1:3.0.4-1) unstable; urgency=low
+
+  * New Upstream
+    Closes: 487167
+    Closes: 582874
+  * Update standards version from 3.8.4 to 3.9.1
+  * Added Homepage to debian/control
+    Closes: 594031
+  * Depend on new cluster-agent library packages
+    Closes: 593321
+
+ -- Simon Horman <horms@debian.org>  Thu, 16 Dec 2010 22:53:53 +0900
+
 heartbeat (1:3.0.3-2) unstable; urgency=low
 
   * Add build dependency on docbook-xml.

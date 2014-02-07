@@ -8,6 +8,8 @@ usr/lib/heartbeat/plugins/HBcomm/bcast.a
 usr/lib/heartbeat/plugins/HBcomm/bcast.la
 usr/lib/heartbeat/plugins/HBcomm/mcast.a
 usr/lib/heartbeat/plugins/HBcomm/mcast.la
+usr/lib/heartbeat/plugins/HBcomm/mcast6.a
+usr/lib/heartbeat/plugins/HBcomm/mcast6.la
 usr/lib/heartbeat/plugins/HBcomm/ping.a
 usr/lib/heartbeat/plugins/HBcomm/ping.la
 usr/lib/heartbeat/plugins/HBcomm/ping6.a
