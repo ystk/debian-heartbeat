@@ -5,6 +5,10 @@
 
 #Thanks to Paolo Molaro <lupus@debian.org> and heartbeat_0.4.6-2.diff
 
+# Enable hardening
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
@@ -13,30 +17,9 @@ cfg:=--prefix=/usr --sysconfdir=/etc --localstatedir=/var \
   --with-group-name=haclient --with-ccmuser-name=hacluster \
   --enable-libc-malloc --disable-fatal-warnings
 
-# These are used for cross-compiling and for saving the configure script
-# from having to guess our platform (since we know it already)
-DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-
-CFLAGS = -Wall -g
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-       CFLAGS += -O0
-else
-       CFLAGS += -O2
-endif
-ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
-       INSTALL_PROGRAM += -s
-endif
-
-ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
-  NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
-  MAKEFLAGS += -j$(NUMJOBS)
-endif
-
 DTMP:=`pwd`/debian/tmp
 RELEASE := $(shell dpkg-parsechangelog | awk '/^Version: / { print $$2 }')
 UPSTREAM := $(shell echo "$(RELEASE)" | sed 's/:\?\([0-9\.]\+\)-[0-9].*/\1/')
-
 
 build: build-arch build-indep
 build-arch: build-stamp

@@ -1,0 +1,38 @@
+diff -ruN Heartbeat-3-0-37f57a36a2dd.bak/heartbeat/init.d/heartbeat.in Heartbeat-3-0-37f57a36a2dd/heartbeat/init.d/heartbeat.in
+--- Heartbeat-3-0-37f57a36a2dd.bak/heartbeat/init.d/heartbeat.in	2014-02-12 10:25:51.000000000 +0000
++++ Heartbeat-3-0-37f57a36a2dd/heartbeat/init.d/heartbeat.in	2014-02-21 14:01:31.956256474 +0000
+@@ -18,6 +18,7 @@
+ # pidfile: @localstatedir@/run/heartbeat.pid
+ # config: @sysconfdir@/ha.d/ha.cf
+ #
++
+ ### BEGIN INIT INFO
+ # Description: @HB_PKG@ is a basic high-availability subsystem.
+ #	It will start services at initialization, and when machines go up
+@@ -33,17 +34,18 @@
+ #		- "ping" heartbeats (for routers, switches, etc.)
+ #	   	(to be used for breaking ties in 2-node systems
+ #		 and monitoring networking availability)
+-#
+ # Short-Description: High-availability services.
+-# Provides: heartbeat HA
+-# Required-Start: $remote_fs $network $time $syslog
+-# Should-Start: openhpid
+-# Required-Stop: $remote_fs $network $time $syslog
+-# Should-stop: openhpid
+-# Default-Start: 2 3 4 5
+-# Default-Stop: 0 1 6
++# Provides: 		heartbeat HA
++# Required-Start: 	$remote_fs $network $time $syslog
++# Should-Start: 	openhpid
++# Required-Stop: 	$remote_fs $network $time $syslog
++# Should-Stop: 		openhpid
++# Default-Start: 	2 3 4 5
++# Default-Stop: 	0 1 6
+ ### END INIT INFO
+ 
++. /lib/lsb/init-functions
++
+ HEARTBEAT=@HA_LIBHBDIR@/heartbeat
+ 
+ [ -r @INITDEFDIR@/heartbeat ] && . @INITDEFDIR@/heartbeat

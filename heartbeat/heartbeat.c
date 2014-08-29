@@ -264,14 +264,6 @@
 
 #define OPTARGS			"dDkMrRsvWlC:V"
 #define	ONEDAY			(24*60*60)	/* Seconds in a day */
-#define REAPER_SIG		0x0001UL
-#define TERM_SIG		0x0002UL
-#define DEBUG_USR1_SIG		0x0004UL
-#define DEBUG_USR2_SIG		0x0008UL
-#define PARENT_DEBUG_USR1_SIG	0x0010UL
-#define PARENT_DEBUG_USR2_SIG	0x0020UL
-#define REREAD_CONFIG_SIG	0x0040UL
-#define FALSE_ALARM_SIG		0x0080UL
 #define MAX_MISSING_PKTS	20
 
 #define	ALWAYSRESTART_ON_SPLITBRAIN	1
@@ -1585,7 +1577,7 @@ master_control_process(void)
 
 	send_local_status();
 
-	if (G_main_add_input(G_PRIORITY_HIGH, FALSE, 
+	if (G_main_add_input(PRI_POLL, FALSE,
 			     &polled_input_SourceFuncs) ==NULL){
 		cl_log(LOG_ERR, "master_control_process: G_main_add_input failed");
 	}
@@ -3136,7 +3128,25 @@ HBDoMsg_T_STATUS(const char * type, struct node_info * fromnode
 		heartbeat_ms = longclockto_ms(sub_longclock
 		(	messagetime, fromnode->local_lastupdate));
 
-		if (heartbeat_ms > config->warntime_ms) {
+		if (heartbeat_ms > config->deadtime_ms) {
+			cl_log(LOG_CRIT
+			,	"Late heartbeat: Node %s:"
+			" interval %ld ms (> deadtime)"
+			,	fromnode->nodename
+			,	heartbeat_ms);
+			/* something delayed us so badly that
+			 * check_for_timeouts() was not run in time to detect
+			 * the node as dead. Now, it turns out it was not dead
+			 * after all, anyways.
+			 * Maybe it detected us as being dead, though,
+			 * and sees us rejoining after partition.
+			 *
+			 * Can we really get away by simply tickling the ccm?
+			 */
+			if (fromnode != curnode)
+				mark_node_dead(fromnode);
+
+		} else if (heartbeat_ms > config->warntime_ms) {
 			cl_log(LOG_WARNING
 			,	"Late heartbeat: Node %s:"
 			" interval %ld ms"
@@ -4645,6 +4655,8 @@ change_link_status(struct node_info *hip, struct link *lnk
 	ha_msg_del(lmsg); lmsg = NULL;
 }
 
+static void reset_seqtrack(struct node_info *n);
+
 /* Mark the given node dead */
 static void
 mark_node_dead(struct node_info *hip)
@@ -4676,10 +4688,7 @@ mark_node_dead(struct node_info *hip)
 	
 	hip->rmt_lastupdate = 0L;
 	hip->anypacketsyet  = 0;
-	hip->track.nmissing = 0;
-	hip->track.last_seq = NOSEQUENCE;
-	hip->track.ackseq = 0;	
-
+	reset_seqtrack(hip);
 }
 
 
@@ -5531,6 +5540,8 @@ reset_seqtrack(struct node_info *n)
 	t->nmissing = 0;
 	t->last_rexmit_req = zero_longclock;
 	t->first_missing_seq = 0;
+	t->last_seq = NOSEQUENCE;
+	t->ackseq = 0;
 	if (t->client_status_msg_queue) {
 		GList* mq = t->client_status_msg_queue;
 		client_status_msg_queue_cleanup(mq);

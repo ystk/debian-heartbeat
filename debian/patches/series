@@ -1,3 +1,4 @@
 typos.dpatch
 01_docbook_path.dpatch
 fix-shlibdeps.patch
+heartbeat-init-script.patch
