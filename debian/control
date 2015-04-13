@@ -3,7 +3,7 @@ Section: admin
 Priority: optional
 Maintainer: Debian HA Maintainers <debian-ha-maintainers@lists.alioth.debian.org>
 Uploaders: Martin Loschwitz <madkiss@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Simon Horman <horms@debian.org>, Frederik Schüler <fs@debian.org>
-Build-Depends: debhelper (>= 7), resource-agents-dev, libcluster-glue-dev, cluster-glue-dev, libpils2-dev, libplumb2-dev, libplumbgpl2-dev, libstonith1-dev, libglib2.0-dev, perl, net-tools, iputils-ping, psmisc, iproute, libtool, libcurl4-openssl-dev | libcurl3-openssl-dev, libxml2-dev, bison, flex, uuid-dev, lynx, libbz2-dev, zlib1g-dev, libsensors4-dev | libsensors-dev, libltdl3-dev, swig, openssh-client, libgnutls-dev, python-dev (>= 2.6.6-3~), libpam0g-dev, libncurses5-dev, psmisc, libopenhpi-dev, libopenipmi-dev, autoconf, automake, libtool, docbook-xsl, xsltproc, docbook-xml
+Build-Depends: debhelper (>= 7), resource-agents-dev, libcluster-glue-dev, cluster-glue-dev, libpils2-dev, libplumb2-dev, libplumbgpl2-dev, libstonith1-dev, libglib2.0-dev, perl, net-tools, iputils-ping, psmisc, iproute, libtool, libcurl4-openssl-dev | libcurl3-openssl-dev, libxml2-dev, bison, flex, uuid-dev, lynx, libbz2-dev, zlib1g-dev, libsensors4-dev | libsensors-dev, libltdl3-dev, swig, openssh-client, libgnutls28-dev, python-dev (>= 2.6.6-3~), libpam0g-dev, libncurses5-dev, psmisc, libopenhpi-dev, libopenipmi-dev, autoconf, automake, libtool, docbook-xsl, xsltproc, docbook-xml
 Standards-Version: 3.9.5
 Vcs-Hg: http://hg.debian.org/hg/debian-ha/heartbeat
 Vcs-Browser: http://hg.debian.org/hg/debian-ha/heartbeat
